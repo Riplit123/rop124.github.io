@@ -1,662 +1,620 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Танчики — мобильное управление с зажатием</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Башенки: Замковая оборона</title>
     <style>
         * {
             box-sizing: border-box;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
         }
         body {
-            margin: 0;
+            background: #1a2a32;
             min-height: 100vh;
-            background: #1a3a2a;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Courier New', monospace;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            margin: 0;
+            padding: 16px;
         }
         .game-container {
-            background: #2d4d3a;
-            border-radius: 28px;
-            padding: 16px;
-            box-shadow: 0 15px 25px rgba(0,0,0,0.8);
-            max-width: 100%;
+            background: #1f3a3f;
+            padding: 24px;
+            border-radius: 32px;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.6);
+            border: 2px solid #5f8b6f;
+        }
+        .canvas-panel {
+            display: flex;
+            gap: 24px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         canvas {
             display: block;
-            margin: 0 auto;
-            width: 100%;
-            height: auto;
-            border-radius: 20px;
-            background: #3b3b3b;
-            box-shadow: inset 0 0 10px #1f1f1f;
-            touch-action: none;
+            background: #2d4a3b;
+            border-radius: 24px;
+            box-shadow: inset 0 0 0 2px #6a8e7a, 0 10px 15px -5px #0f1e1a;
+            cursor: crosshair;
+            width: 600px;
+            height: 600px;
+            border: none;
         }
-        .panel {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: #c6ffc6;
+        .info-panel {
+            background: #1e3b30;
+            border-radius: 24px;
+            padding: 20px;
+            min-width: 220px;
+            color: #d4e6d1;
+            box-shadow: inset 0 0 0 2px #3f6b53, 0 10px 15px -5px #0b1c16;
+            border: 1px solid #a2c2aa;
+        }
+        .stat {
+            background: #173129;
+            border-radius: 40px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
             font-weight: bold;
-            font-size: 22px;
-            padding: 10px 15px;
-            text-shadow: 2px 2px 0 #0b4f0b;
-            background: #1e3a1e;
-            border-radius: 50px;
-            margin-top: 10px;
-            border: 3px solid #7aa07a;
-        }
-        .controls {
+            font-size: 1.4rem;
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 14px;
-            margin-top: 16px;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #5a9776;
+            box-shadow: inset 0 2px 5px #0c1f1a;
         }
-        .arrow-panel {
+        .stat span {
+            background: #2c5543;
+            padding: 8px 18px;
+            border-radius: 40px;
+            color: #f0ffe6;
+            font-size: 2rem;
+            line-height: 1;
+            border: 1px solid #95bda0;
+            text-shadow: 2px 2px 0 #163a28;
+        }
+        .wave-info {
+            background: #203d33;
+            border-radius: 30px;
+            padding: 16px;
+            text-align: center;
+            font-size: 1.3rem;
+            border: 1px solid #679d7c;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+        .button-group {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 8px;
+            gap: 14px;
         }
-        .arrow-row {
-            display: flex;
-            gap: 18px;
-            justify-content: center;
-        }
-        .ctrl-btn {
-            background: #3b5a3b;
-            border: 4px solid #afdfaf;
-            color: #f0fff0;
-            font-size: 38px;
+        button {
+            background: #365f49;
+            border: none;
+            border-radius: 60px;
+            padding: 16px 12px;
+            font-size: 1.5rem;
             font-weight: bold;
-            width: 90px;
-            height: 90px;
-            border-radius: 26px;
-            box-shadow: 0 7px 0 #2b6a2b;
-            text-align: center;
-            line-height: 82px;
+            color: #edffe3;
+            border-bottom: 6px solid #1a3a2a;
+            border-right: 3px solid #1e402e;
+            transition: 0.07s;
             cursor: pointer;
-            transition: 0.05s linear;
-            touch-action: manipulation;
+            box-shadow: 0 7px 0 #1b3627;
+            letter-spacing: 1px;
         }
-        .ctrl-btn:active {
-            transform: translateY(7px);
-            box-shadow: none;
+        button:hover {
+            background: #428a5e;
+            transform: translateY(-2px);
+            border-bottom-width: 8px;
         }
-        .fire-btn {
-            background: #b14242;
-            border-color: #ffc3c3;
-            color: white;
-            box-shadow: 0 7px 0 #761c1c;
-            width: 180px;
+        button:active {
+            transform: translateY(6px);
+            border-bottom-width: 2px;
+            box-shadow: 0 2px 0 #1b3627;
         }
-        @media (max-width: 600px) {
-            .ctrl-btn {
-                width: 75px;
-                height: 75px;
-                font-size: 32px;
-                line-height: 67px;
-            }
-            .fire-btn {
-                width: 150px;
-            }
+        button:disabled {
+            opacity: 0.4;
+            transform: translateY(4px);
+            border-bottom-width: 3px;
+            pointer-events: none;
+            filter: grayscale(0.5);
         }
-        @media (max-width: 400px) {
-            .ctrl-btn {
-                width: 65px;
-                height: 65px;
-                font-size: 28px;
-                line-height: 57px;
-            }
-            .fire-btn {
-                width: 130px;
-            }
+        .message {
+            background: #262b1f;
+            border-radius: 30px;
+            padding: 12px;
+            font-size: 1.2rem;
+            text-align: center;
+            color: #ffeeaa;
+            border: 2px solid #dbb05c;
+            margin-top: 16px;
+            font-weight: bold;
         }
-        .status {
-            background: #0f2f0f;
-            padding: 8px 20px;
-            border-radius: 40px;
-            border: 2px solid #8bb88b;
+        .footer {
+            margin-top: 20px;
+            color: #74967c;
+            text-align: center;
+            font-size: 1rem;
         }
     </style>
 </head>
 <body>
 <div class="game-container">
-    <canvas id="gameCanvas" width="600" height="600"></canvas>
-    <div class="panel">
-        <div class="status">❤️ <span id="lives">3</span></div>
-        <div class="status">💀 <span id="enemies">5</span></div>
-        <div class="status">⭐ <span id="score">0</span></div>
-    </div>
-    <div class="controls">
-        <div class="arrow-panel">
-            <div class="arrow-row">
-                <div class="ctrl-btn" id="up">▲</div>
+    <div class="canvas-panel">
+        <canvas id="gameCanvas" width="600" height="600"></canvas>
+        <div class="info-panel">
+            <div class="stat">
+                💰 <span id="moneyDisplay">200</span>
             </div>
-            <div class="arrow-row">
-                <div class="ctrl-btn" id="left">◀</div>
-                <div class="ctrl-btn" id="down">▼</div>
-                <div class="ctrl-btn" id="right">▶</div>
+            <div class="stat">
+                ❤️ <span id="livesDisplay">10</span>
             </div>
+            <div class="wave-info">
+                🌊 ВОЛНА <span id="waveDisplay">0</span>/5
+            </div>
+            <div class="button-group">
+                <button id="startWaveBtn">⚔️ СТАРТ</button>
+                <button id="restartBtn">🔄 ПЕРЕЗАПУСК</button>
+            </div>
+            <div id="statusMessage" class="message">🏰 Стройте замки рядом с дорогой</div>
         </div>
-        <div class="ctrl-btn fire-btn" id="fire">🔥</div>
+    </div>
+    <div class="footer">
+        🛡️ Клетки у пути — стройка (100💰)  |  Враг в конце ❤️ -1  |  +50💰 за убийство
     </div>
 </div>
-
 <script>
-    (function() {
-        // ----- РАЗМЕРЫ ПОЛЯ -----
-        const CELL_SIZE = 40;
-        const GRID_SIZE = 15;
-        const CANVAS_SIZE = GRID_SIZE * CELL_SIZE; // 600x600
+(function() {
+    // ---------- НАСТРОЙКИ ----------
+    const CELL_SIZE = 60;          // пикселей
+    const GRID_SIZE = 10;           // 10x10
+    const CANVAS_SIZE = 600;
 
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const livesSpan = document.getElementById('lives');
-        const enemiesSpan = document.getElementById('enemies');
-        const scoreSpan = document.getElementById('score');
+    // Фиксированный путь (клетки)
+    const PATH_CELLS = [
+        {x:0, y:0}, {x:0, y:1}, {x:0, y:2}, {x:1, y:2}, {x:2, y:2}, {x:2, y:3}, {x:2, y:4},
+        {x:3, y:4}, {x:4, y:4}, {x:4, y:5}, {x:4, y:6}, {x:5, y:6}, {x:6, y:6}, {x:6, y:7},
+        {x:6, y:8}, {x:7, y:8}, {x:8, y:8}, {x:8, y:9}, {x:9, y:9}
+    ];
 
-        // ----- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ -----
-        let walls = [];
-        let bullets = [];
-        let enemies = [];
-        let player = null;
-        let gameRunning = true;
-        let enemyCount = 0;            // сколько уничтожено
-        const MAX_ENEMIES = 5;           // всего врагов в уровне
-        const MAX_ACTIVE_ENEMIES = 3;
-        let enemySpawnTimer = 0;
-        let score = 0;
+    // Множество клеток пути для быстрой проверки
+    const pathSet = new Set(PATH_CELLS.map(p => `${p.x},${p.y}`));
 
-        // ----- СОСТОЯНИЕ УПРАВЛЕНИЯ (для клавиш и тач-кнопок) -----
-        const controlState = {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            fire: false   // зажатие огня не используем, оставим для совместимости
-        };
+    // Клетки, доступные для строительства (рядом с путём, но не на пути)
+    let buildableCells = [];
 
-        // ----- ВСПОМОГАТЕЛЬНАЯ ФУНКЦИЯ СТОЛКНОВЕНИЯ -----
-        function rectCollide(r1, r2) {
-            return !(r2.x >= r1.x + r1.w || r2.x + r2.w <= r1.x || r2.y >= r1.y + r1.h || r2.y + r2.h <= r1.y);
-        }
+    // ---------- ИГРОВЫЕ ПЕРЕМЕННЫЕ ----------
+    let money = 200;
+    let lives = 10;
+    let currentWave = 0;            // 0 — ещё не начали, волны 1..5
+    const MAX_WAVES = 5;
+    let gameStatus = 'playing';      // 'playing', 'won', 'lost'
+    let waveActive = false;          // идёт ли сейчас волна (спавн или есть живые враги)
+    let waveStartTime = 0;
+    let waveEnemiesToSpawn = [];     // очередь спавна { delay, enemyData }
 
-        // ----- СТЕНЫ (КИРПИЧИ) -----
-        function buildWalls() {
-            walls = [];
-            // внешняя рамка
-            for (let row = 0; row < GRID_SIZE; row++) {
-                for (let col = 0; col < GRID_SIZE; col++) {
-                    if (row === 0 || row === GRID_SIZE-1 || col === 0 || col === GRID_SIZE-1) {
-                        walls.push({ x: col * CELL_SIZE, y: row * CELL_SIZE, w: CELL_SIZE, h: CELL_SIZE, type: 'brick' });
-                    }
-                }
-            }
-            // внутренние блоки
-            const blocks = [
-                [2,2],[3,2],[4,2],[5,2],[6,2],
-                [2,5],[2,6],[2,7],
-                [12,5],[12,6],[12,7],
-                [7,7],[8,7],[7,8],[8,8],
-                [10,10],[11,10],[10,11],[11,11],
-                [4,12],[5,12],[6,12],[7,12],[8,12],[9,12],[10,12]
-            ];
-            blocks.forEach(([col, row]) => {
-                walls.push({ x: col * CELL_SIZE, y: row * CELL_SIZE, w: CELL_SIZE, h: CELL_SIZE, type: 'brick' });
-            });
-        }
-        buildWalls();
+    // Динамические сущности
+    let enemies = [];
+    let towers = [];
 
-        // ----- ФУНКЦИЯ ПРОВЕРКИ СТЕН -----
-        function collideWithWalls(rect) {
-            for (let w of walls) {
-                if (rectCollide(rect, w)) return true;
-            }
-            return false;
-        }
+    // Временные метки для атак (перезарядка)
+    let lastTimestamp = 0;
 
-        // ----- КЛАСС ПУЛИ -----
-        class Bullet {
-            constructor(x, y, dir, owner) {
-                this.x = x;
-                this.y = y;
-                this.w = 6;
-                this.h = 6;
-                this.dir = dir; // 0 up,1 right,2 down,3 left
-                this.speed = 6;
-                this.owner = owner; // 'player' или 'enemy'
-                this.active = true;
-            }
+    // DOM элементы
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const moneySpan = document.getElementById('moneyDisplay');
+    const livesSpan = document.getElementById('livesDisplay');
+    const waveSpan = document.getElementById('waveDisplay');
+    const statusMsg = document.getElementById('statusMessage');
+    const startWaveBtn = document.getElementById('startWaveBtn');
+    const restartBtn = document.getElementById('restartBtn');
 
-            update() {
-                if (!this.active) return;
+    // ---------- ПРЕДВАРИТЕЛЬНЫЕ РАСЧЁТЫ ----------
+    // Перевод пути в пиксельные координаты (центры клеток)
+    const waypoints = PATH_CELLS.map(cell => ({
+        x: cell.x * CELL_SIZE + CELL_SIZE/2,
+        y: cell.y * CELL_SIZE + CELL_SIZE/2
+    }));
 
-                // движение
-                if (this.dir === 0) this.y -= this.speed;
-                else if (this.dir === 1) this.x += this.speed;
-                else if (this.dir === 2) this.y += this.speed;
-                else this.x -= this.speed;
-
-                // границы
-                if (this.x < 0 || this.x + this.w > CANVAS_SIZE || this.y < 0 || this.y + this.h > CANVAS_SIZE) {
-                    this.active = false;
-                    return;
-                }
-
-                // столкновение со стенами
-                for (let i = walls.length - 1; i >= 0; i--) {
-                    const w = walls[i];
-                    if (rectCollide(this, w)) {
-                        this.active = false;
-                        if (w.type === 'brick') walls.splice(i, 1); // кирпич разрушается
-                        break;
-                    }
-                }
-                if (!this.active) return;
-
-                // попадание в игрока (только вражеские пули)
-                if (this.owner === 'enemy' && player && player.active && rectCollide(this, player)) {
-                    this.active = false;
-                    playerHit();
-                    return;
-                }
-
-                // попадание во врагов (только пули игрока)
-                if (this.owner === 'player') {
-                    for (let i = enemies.length - 1; i >= 0; i--) {
-                        const e = enemies[i];
-                        if (!e.active) continue;
-                        if (rectCollide(this, e)) {
-                            this.active = false;
-                            e.active = false;
-                            enemies.splice(i, 1);
-                            enemyCount++;
-                            score += 100;
-                            updateUI();
+    // Вычисляем строительные клетки
+    function computeBuildableCells() {
+        const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+        const buildable = [];
+        for (let row = 0; row < GRID_SIZE; row++) {
+            for (let col = 0; col < GRID_SIZE; col++) {
+                const key = `${col},${row}`;
+                if (pathSet.has(key)) continue; // нельзя строить на пути
+                // проверяем соседей
+                let hasPathNeighbor = false;
+                for (let [dx, dy] of dirs) {
+                    const nx = col + dx, ny = row + dy;
+                    if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE) {
+                        if (pathSet.has(`${nx},${ny}`)) {
+                            hasPathNeighbor = true;
                             break;
                         }
                     }
                 }
-            }
-
-            draw() {
-                if (!this.active) return;
-                ctx.fillStyle = this.owner === 'player' ? '#ffd966' : '#ff944d';
-                ctx.shadowColor = '#ffaa00';
-                ctx.shadowBlur = 10;
-                ctx.fillRect(this.x, this.y, this.w, this.h);
-                ctx.shadowBlur = 0;
+                if (hasPathNeighbor) buildable.push({x: col, y: row});
             }
         }
+        return buildable;
+    }
+    buildableCells = computeBuildableCells();
 
-        // ----- КЛАСС ТАНКА (общий для игрока и врагов) -----
-        class Tank {
-            constructor(x, y, dir, isPlayer = false) {
-                this.x = x;
-                this.y = y;
-                this.w = 32;
-                this.h = 32;
-                this.dir = dir;           // 0 up,1 right,2 down,3 left
-                this.speed = isPlayer ? 3 : 1.7;
-                this.isPlayer = isPlayer;
-                this.active = true;
-                this.shootCooldown = 0;
-                this.aiTimer = 0;          // для смены направления врага
-                this.respawnTimer = 0;      // для игрока
-            }
+    // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+    function updateUI() {
+        moneySpan.innerText = money;
+        livesSpan.innerText = lives;
+        waveSpan.innerText = currentWave + (gameStatus === 'won' ? ' (победа)' : '');
+        if (gameStatus === 'lost') statusMsg.innerText = '💔 ВЫ ПРОИГРАЛИ... Перезапустите';
+        else if (gameStatus === 'won') statusMsg.innerText = '🏆 ПОБЕДА! Все волны отражены';
+        else if (waveActive) statusMsg.innerText = '⚡ Враги атакуют!';
+        else statusMsg.innerText = '🛡️ Стройте башни и начинайте волну';
+    }
 
-            // Проверка столкновения с другими танками
-            collideWithOtherTanks(newRect, excludeSelf = true) {
-                if (this.isPlayer) {
-                    for (let e of enemies) {
-                        if (!e.active) continue;
-                        if (rectCollide(newRect, e)) return true;
-                    }
-                } else {
-                    if (player && player.active && rectCollide(newRect, player)) return true;
-                    for (let e of enemies) {
-                        if (e === this || !e.active) continue;
-                        if (rectCollide(newRect, e)) return true;
-                    }
-                }
-                return false;
-            }
-
-            move(dx, dy) {
-                if (!this.active) return false;
-                const newX = this.x + dx;
-                const newY = this.y + dy;
-                // границы
-                if (newX < 2 || newX + this.w > CANVAS_SIZE - 2 || newY < 2 || newY + this.h > CANVAS_SIZE - 2) return false;
-
-                const testRect = { x: newX, y: newY, w: this.w, h: this.h };
-                // стены
-                if (collideWithWalls(testRect)) return false;
-                // другие танки
-                if (this.collideWithOtherTanks(testRect)) return false;
-
-                this.x = newX;
-                this.y = newY;
-                return true;
-            }
-
-            tryShoot() {
-                if (!this.active || this.shootCooldown > 0) return false;
-                let bx = this.x + 13;
-                let by = this.y + 13;
-                // смещение пули относительно дула
-                if (this.dir === 0) {      // вверх
-                    bx = this.x + 13;
-                    by = this.y - 3;
-                } else if (this.dir === 1) { // вправо
-                    bx = this.x + this.w;
-                    by = this.y + 13;
-                } else if (this.dir === 2) { // вниз
-                    bx = this.x + 13;
-                    by = this.y + this.h;
-                } else if (this.dir === 3) { // влево
-                    bx = this.x - 3;
-                    by = this.y + 13;
-                }
-                bullets.push(new Bullet(bx, by, this.dir, this.isPlayer ? 'player' : 'enemy'));
-                this.shootCooldown = 15;
-                return true;
-            }
-
-            update() {
-                if (this.shootCooldown > 0) this.shootCooldown--;
-                if (!this.active) return;
-
-                if (!this.isPlayer) {   // логика врага
-                    if (this.aiTimer <= 0) {
-                        this.dir = Math.floor(Math.random() * 4);
-                        this.aiTimer = 30 + Math.floor(Math.random() * 50);
-                    } else {
-                        this.aiTimer--;
-                    }
-
-                    let dx = 0, dy = 0;
-                    if (this.dir === 0) dy = -this.speed;
-                    else if (this.dir === 1) dx = this.speed;
-                    else if (this.dir === 2) dy = this.speed;
-                    else dx = -this.speed;
-
-                    if (!this.move(dx, dy)) {
-                        this.aiTimer = 0;
-                    }
-
-                    // случайная стрельба
-                    if (Math.random() < 0.012 && this.shootCooldown === 0) {
-                        this.tryShoot();
-                    }
-                }
-            }
-
-            draw() {
-                if (!this.active) return;
-                ctx.fillStyle = this.isPlayer ? '#7cfc00' : '#e34234';
-                ctx.shadowColor = this.isPlayer ? '#b3ff99' : '#ff6b6b';
-                ctx.shadowBlur = 12;
-                ctx.fillRect(this.x, this.y, this.w, this.h);
-                ctx.shadowBlur = 0;
-                // дуло
-                ctx.fillStyle = '#ffffff';
-                const cx = this.x + 14;
-                const cy = this.y + 14;
-                if (this.dir === 0) ctx.fillRect(cx, this.y - 4, 4, 10);
-                else if (this.dir === 1) ctx.fillRect(this.x + this.w - 4, cy, 10, 4);
-                else if (this.dir === 2) ctx.fillRect(cx, this.y + this.h - 4, 4, 10);
-                else ctx.fillRect(this.x - 4, cy, 10, 4);
-            }
-        }
-
-        // ----- ИНИЦИАЛИЗАЦИЯ ИГРОКА -----
-        player = new Tank(7 * CELL_SIZE + 4, 13 * CELL_SIZE + 4, 0, true);
-        player.lives = 3;
-        player.respawnTimer = 0;
-
-        // ----- ФУНКЦИЯ ПОРАЖЕНИЯ ИГРОКА -----
-        function playerHit() {
-            if (!player.active) return;
-            player.active = false;
-            player.lives--;
-            updateUI();
-            if (player.lives <= 0) {
-                gameRunning = false;
-                alert('Игра окончена!');
-                return;
-            }
-            player.respawnTimer = 70;
-        }
-
-        // ----- ПОЯВЛЕНИЕ ВРАГА -----
-        function spawnEnemy() {
-            if (enemies.length >= MAX_ACTIVE_ENEMIES) return;
-            const cols = [2, 7, 12];
-            const col = cols[Math.floor(Math.random() * cols.length)];
-            const x = col * CELL_SIZE + 4;
-            const y = 1 * CELL_SIZE + 4;
-
-            for (let e of enemies) {
-                if (Math.abs(e.x - x) < CELL_SIZE && Math.abs(e.y - y) < CELL_SIZE) return;
-            }
-            if (player.active && Math.abs(player.x - x) < CELL_SIZE && Math.abs(player.y - y) < CELL_SIZE) return;
-
-            enemies.push(new Tank(x, y, 2, false));
-        }
-
-        // начальные два врага
-        for (let i = 0; i < 2; i++) spawnEnemy();
-
-        // ----- ОБНОВЛЕНИЕ UI -----
-        function updateUI() {
-            livesSpan.innerText = player.lives;
-            const remaining = Math.max(0, MAX_ENEMIES - enemyCount);
-            enemiesSpan.innerText = remaining;
-            scoreSpan.innerText = score;
-        }
-
-        // ----- ОТРИСОВКА -----
-        function draw() {
-            // фон
-            ctx.fillStyle = '#2b4b2b';
-            ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-
-            // сетка
-            ctx.strokeStyle = '#4f7a4f';
-            ctx.lineWidth = 1;
-            for (let i = 0; i <= GRID_SIZE; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * CELL_SIZE, 0);
-                ctx.lineTo(i * CELL_SIZE, CANVAS_SIZE);
-                ctx.strokeStyle = '#3f623f';
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i * CELL_SIZE);
-                ctx.lineTo(CANVAS_SIZE, i * CELL_SIZE);
-                ctx.stroke();
-            }
-
-            // стены
-            walls.forEach(w => {
-                ctx.fillStyle = '#b86b2d';
-                ctx.fillRect(w.x, w.y, w.w-2, w.h-2);
-                ctx.fillStyle = '#e3a56d';
-                ctx.fillRect(w.x+5, w.y+5, w.w-12, w.h-12);
-            });
-
-            // пули
-            bullets.forEach(b => b.draw());
-
-            // враги
-            enemies.forEach(e => e.draw());
-
-            // игрок
-            if (player.active) player.draw();
-        }
-
-        // ----- ОБРАБОТКА УПРАВЛЕНИЯ -----
-
-        // Клавиатура
-        window.addEventListener('keydown', (e) => {
-            if (!player || !player.active || !gameRunning) return;
-            switch(e.key) {
-                case 'ArrowUp': e.preventDefault(); controlState.up = true; break;
-                case 'ArrowDown': e.preventDefault(); controlState.down = true; break;
-                case 'ArrowLeft': e.preventDefault(); controlState.left = true; break;
-                case 'ArrowRight': e.preventDefault(); controlState.right = true; break;
-                case ' ': e.preventDefault(); 
-                    // стрельба однократно
-                    if (player.shootCooldown === 0) player.tryShoot();
-                    break;
-            }
-        });
-        window.addEventListener('keyup', (e) => {
-            switch(e.key) {
-                case 'ArrowUp': controlState.up = false; break;
-                case 'ArrowDown': controlState.down = false; break;
-                case 'ArrowLeft': controlState.left = false; break;
-                case 'ArrowRight': controlState.right = false; break;
-                case ' ': e.preventDefault(); break;
-            }
-        });
-
-        // Мобильные кнопки (touch + mouse)
-        function setupMobileControls() {
-            const upBtn = document.getElementById('up');
-            const downBtn = document.getElementById('down');
-            const leftBtn = document.getElementById('left');
-            const rightBtn = document.getElementById('right');
-            const fireBtn = document.getElementById('fire');
-
-            // Вспомогательная функция для назначения событий зажатия
-            function assignButtonEvents(btn, direction) {
-                // touch
-                btn.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    controlState[direction] = true;
-                });
-                btn.addEventListener('touchend', (e) => {
-                    e.preventDefault();
-                    controlState[direction] = false;
-                });
-                btn.addEventListener('touchcancel', (e) => {
-                    e.preventDefault();
-                    controlState[direction] = false;
-                });
-                // mouse
-                btn.addEventListener('mousedown', (e) => {
-                    e.preventDefault();
-                    controlState[direction] = true;
-                });
-                btn.addEventListener('mouseup', (e) => {
-                    e.preventDefault();
-                    controlState[direction] = false;
-                });
-                btn.addEventListener('mouseleave', (e) => {
-                    // если мышь уходит с кнопки при зажатии — сбрасываем
-                    controlState[direction] = false;
-                });
-            }
-
-            assignButtonEvents(upBtn, 'up');
-            assignButtonEvents(downBtn, 'down');
-            assignButtonEvents(leftBtn, 'left');
-            assignButtonEvents(rightBtn, 'right');
-
-            // Кнопка огня: только однократный выстрел (не зажатие)
-            fireBtn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (player && player.active && gameRunning && player.shootCooldown === 0) {
-                    player.tryShoot();
-                }
-            });
-            fireBtn.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                if (player && player.active && gameRunning && player.shootCooldown === 0) {
-                    player.tryShoot();
-                }
-            });
-            // Дополнительно сбрасываем fire, хотя он не используется в движении
-        }
-
-        setupMobileControls();
-
-        // ----- ИГРОВОЙ ЦИКЛ ДВИЖЕНИЯ (на основе controlState) -----
-        function handlePlayerMovement() {
-            if (!player || !player.active || !gameRunning) return;
-
-            let dx = 0, dy = 0;
-            // Определяем направление (приоритет последнего нажатого, но в данном случае просто по флагам)
-            if (controlState.up) { player.dir = 0; dy = -player.speed; }
-            else if (controlState.down) { player.dir = 2; dy = player.speed; }
-            else if (controlState.left) { player.dir = 3; dx = -player.speed; }
-            else if (controlState.right) { player.dir = 1; dx = player.speed; }
-
-            if (dx !== 0 || dy !== 0) {
-                player.move(dx, dy);
-            }
-        }
-
-        // Запускаем интервал для обработки движения (60 fps)
-        setInterval(handlePlayerMovement, 16); // ~60fps
-
-        // ----- ГЛАВНЫЙ ИГРОВОЙ ЦИКЛ (обновление логики) -----
-        function gameLoop() {
-            if (!gameRunning) return;
-
-            // спавн врагов
-            if (enemyCount < MAX_ENEMIES && enemies.length < MAX_ACTIVE_ENEMIES) {
-                if (enemySpawnTimer <= 0) {
-                    spawnEnemy();
-                    enemySpawnTimer = 35;
-                } else {
-                    enemySpawnTimer--;
-                }
-            }
-
-            // обновление игрока (респаун)
-            if (player.active) {
-                player.update(); // обновляет кулдаун
-            } else {
-                if (player.respawnTimer > 0) {
-                    player.respawnTimer--;
-                    if (player.respawnTimer === 0) {
-                        player.active = true;
-                        player.x = 7 * CELL_SIZE + 4;
-                        player.y = 13 * CELL_SIZE + 4;
-                        player.dir = 0;
-                    }
-                }
-            }
-
-            // обновление врагов
-            enemies.forEach(e => e.update());
-
-            // обновление пуль
-            bullets = bullets.filter(b => b.active);
-            bullets.forEach(b => b.update());
-
-            // отрисовка
-            draw();
-
-            requestAnimationFrame(gameLoop);
-        }
-
-        gameLoop();
+    // Сброс игры (перезапуск)
+    function restartGame() {
+        money = 200;
+        lives = 10;
+        currentWave = 0;
+        gameStatus = 'playing';
+        waveActive = false;
+        enemies = [];
+        towers = [];
+        waveEnemiesToSpawn = [];
         updateUI();
+        draw(); // перерисовать
+    }
 
-        // блокировка скролла на canvas
-        canvas.addEventListener('touchstart', e => e.preventDefault());
-        canvas.addEventListener('touchend', e => e.preventDefault());
-    })();
+    // Создание врага заданной волны
+    function createEnemyForWave(waveIdx) {
+        const baseHealth = 15 + waveIdx * 10;  // 1:25, 2:35, 3:45, 4:55, 5:65
+        const health = baseHealth;
+        const speed = 40; // пикселей в секунду
+        const reward = 50;
+        return {
+            waypoints: [...waypoints], // копия пути
+            targetIdx: 1,              // индекс следующей точки (0 - стартовая)
+            x: waypoints[0].x,
+            y: waypoints[0].y,
+            health: health,
+            maxHealth: health,
+            speed: speed,
+            reward: reward,
+            active: true
+        };
+    }
+
+    // Запуск следующей волны
+    function startWave() {
+        if (gameStatus !== 'playing') return;
+        if (waveActive) return; // уже идёт волна
+        if (currentWave >= MAX_WAVES) {
+            gameStatus = 'won';
+            updateUI();
+            return;
+        }
+
+        currentWave++;
+        if (currentWave > MAX_WAVES) {
+            gameStatus = 'won';
+            updateUI();
+            return;
+        }
+
+        // Формируем очередь спавна
+        const waveSize = 3 + (currentWave-1) * 2; // 3,5,7,9,11
+        const spawnDelay = 600; // мс между врагами
+        waveEnemiesToSpawn = [];
+        for (let i = 0; i < waveSize; i++) {
+            const delay = i * spawnDelay;
+            waveEnemiesToSpawn.push({
+                delay: delay,
+                enemy: createEnemyForWave(currentWave)
+            });
+        }
+
+        waveActive = true;
+        waveStartTime = performance.now();
+        updateUI();
+    }
+
+    // Проверка окончания волны (нет врагов и спавнов)
+    function checkWaveCompletion() {
+        if (!waveActive) return;
+        if (enemies.length === 0 && waveEnemiesToSpawn.length === 0) {
+            waveActive = false;
+            if (currentWave >= MAX_WAVES && gameStatus === 'playing') {
+                gameStatus = 'won';
+            }
+            updateUI();
+        }
+    }
+
+    // Построить башню (вызывается при клике)
+    function tryPlaceTower(col, row) {
+        if (gameStatus !== 'playing') return false;
+        // можно ли строить на этой клетке
+        const canBuild = buildableCells.some(cell => cell.x === col && cell.y === row);
+        if (!canBuild) return false;
+        // нет ли уже башни
+        if (towers.some(t => t.col === col && t.row === row)) return false;
+        if (money < 100) return false;
+
+        // строим
+        towers.push({
+            col, row,
+            x: col * CELL_SIZE + CELL_SIZE/2,
+            y: row * CELL_SIZE + CELL_SIZE/2,
+            lastShot: 0,             // миллисекунды (относительно общего времени)
+            cooldown: 500,            // мс
+            damage: 12,
+            range: 130                // пикселей (чуть больше 2 клеток)
+        });
+        money -= 100;
+        updateUI();
+        return true;
+    }
+
+    // ---------- АТАКА БАШЕН ----------
+    function updateTowers(now) {
+        for (let tower of towers) {
+            // время с последнего выстрела
+            if (now - tower.lastShot >= tower.cooldown) {
+                // ищем ближайшего врага в радиусе
+                let closestEnemy = null;
+                let minDist = Infinity;
+                for (let enemy of enemies) {
+                    const dx = enemy.x - tower.x;
+                    const dy = enemy.y - tower.y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist <= tower.range && dist < minDist) {
+                        minDist = dist;
+                        closestEnemy = enemy;
+                    }
+                }
+                if (closestEnemy) {
+                    // стреляем
+                    closestEnemy.health -= tower.damage;
+                    tower.lastShot = now;
+                    // если враг умер
+                    if (closestEnemy.health <= 0) {
+                        // удалим позже в updateEnemies, но сейчас отметим
+                        // деньги начислим при удалении
+                    }
+                }
+            }
+        }
+    }
+
+    // ---------- ДВИЖЕНИЕ ВРАГОВ И УРОН ----------
+    function updateEnemies(deltaSec, now) {
+        // Движение и проверка достижения конца
+        for (let i = enemies.length - 1; i >= 0; i--) {
+            const e = enemies[i];
+            if (e.health <= 0) {
+                // убит
+                money += e.reward;
+                enemies.splice(i, 1);
+                continue;
+            }
+
+            const target = e.waypoints[e.targetIdx];
+            if (!target) {
+                // дошли до конца (ошибка, но удалим)
+                enemies.splice(i, 1);
+                lives--;
+                if (lives < 0) lives = 0;
+                continue;
+            }
+
+            // вектор к цели
+            const dx = target.x - e.x;
+            const dy = target.y - e.y;
+            const distance = Math.sqrt(dx*dx + dy*dy);
+
+            if (distance < 2) { // достиг точки
+                e.x = target.x;
+                e.y = target.y;
+                e.targetIdx++;
+                if (e.targetIdx >= e.waypoints.length) {
+                    // враг дошёл до конца
+                    enemies.splice(i, 1);
+                    lives--;
+                    if (lives < 0) lives = 0;
+                    continue;
+                }
+            } else {
+                // двигаемся
+                const move = e.speed * deltaSec;
+                const normX = dx / distance;
+                const normY = dy / distance;
+                e.x += normX * move;
+                e.y += normY * move;
+            }
+        }
+
+        // Проверка поражения
+        if (lives <= 0) {
+            gameStatus = 'lost';
+            waveActive = false;
+            waveEnemiesToSpawn = []; // отключаем спавн
+            enemies = []; // убираем врагов
+        }
+    }
+
+    // Спавн врагов по расписанию
+    function updateSpawning(now) {
+        if (!waveActive || gameStatus !== 'playing') return;
+        if (waveEnemiesToSpawn.length === 0) return;
+
+        const elapsed = now - waveStartTime;
+        // копируем массив, чтобы удалять по индексу (проходим с конца)
+        for (let i = waveEnemiesToSpawn.length - 1; i >= 0; i--) {
+            if (elapsed >= waveEnemiesToSpawn[i].delay) {
+                // создаём врага
+                const newEnemy = { ...waveEnemiesToSpawn[i].enemy }; // копия
+                newEnemy.waypoints = [...waypoints]; // свежий путь
+                newEnemy.x = waypoints[0].x;
+                newEnemy.y = waypoints[0].y;
+                newEnemy.targetIdx = 1;
+                enemies.push(newEnemy);
+                waveEnemiesToSpawn.splice(i, 1);
+            }
+        }
+    }
+
+    // ---------- ОТРИСОВКА ----------
+    function draw() {
+        ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+        // Рисуем сетку
+        ctx.strokeStyle = '#5d8b6d';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= GRID_SIZE; i++) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#55806b';
+            ctx.lineWidth = 1;
+            ctx.moveTo(i * CELL_SIZE, 0);
+            ctx.lineTo(i * CELL_SIZE, CANVAS_SIZE);
+            ctx.stroke();
+            ctx.moveTo(0, i * CELL_SIZE);
+            ctx.lineTo(CANVAS_SIZE, i * CELL_SIZE);
+            ctx.stroke();
+        }
+
+        // Заливка пути (песок)
+        PATH_CELLS.forEach(cell => {
+            ctx.fillStyle = '#b5926a';
+            ctx.fillRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE-1, CELL_SIZE-1);
+        });
+
+        // Заливка строительных клеток
+        buildableCells.forEach(cell => {
+            ctx.fillStyle = '#3f8865';
+            ctx.globalAlpha = 0.3;
+            ctx.fillRect(cell.x * CELL_SIZE, cell.y * CELL_SIZE, CELL_SIZE-1, CELL_SIZE-1);
+            ctx.globalAlpha = 1.0;
+        });
+
+        // Рисуем башни (замки)
+        towers.forEach(t => {
+            // основание
+            ctx.fillStyle = '#6f4e37';
+            ctx.shadowColor = '#dbb05c';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(t.x, t.y, 20, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#c49a6c';
+            ctx.beginPath();
+            ctx.arc(t.x-4, t.y-6, 8, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#e2c28b';
+            ctx.beginPath();
+            ctx.arc(t.x+6, t.y-8, 6, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+        });
+
+        // Рисуем врагов
+        enemies.forEach(e => {
+            const healthPercent = e.health / e.maxHealth;
+            ctx.fillStyle = '#712e2e';
+            ctx.shadowColor = '#490000';
+            ctx.shadowBlur = 10;
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, 18, 0, 2*Math.PI);
+            ctx.fill();
+            ctx.fillStyle = '#f5c542';
+            ctx.shadowBlur = 8;
+            ctx.beginPath();
+            ctx.arc(e.x-4, e.y-5, 7, 0, 2*Math.PI);
+            ctx.fill();
+            // полоска здоровья
+            ctx.shadowBlur = 0;
+            ctx.fillStyle = '#111';
+            ctx.fillRect(e.x-20, e.y-28, 40, 6);
+            ctx.fillStyle = '#3eff9e';
+            ctx.fillRect(e.x-20, e.y-28, 40 * healthPercent, 5);
+        });
+
+        // Декорации входа/выхода
+        ctx.font = 'bold 20px "Segoe UI"';
+        ctx.fillStyle = '#dcd7ba';
+        ctx.fillText('🚪', 5, 35);
+        ctx.fillText('🏁', 535, 575);
+    }
+
+    // ---------- ИГРОВОЙ ЦИКЛ ----------
+    function gameLoop(now) {
+        if (!lastTimestamp) {
+            lastTimestamp = now;
+            requestAnimationFrame(gameLoop);
+            return;
+        }
+
+        const deltaMs = Math.min(100, now - lastTimestamp); // ограничим скачки
+        const deltaSec = deltaMs / 1000;
+        lastTimestamp = now;
+
+        if (gameStatus === 'playing') {
+            // Спавн врагов
+            updateSpawning(now);
+            // Атаки башен
+            updateTowers(now);
+            // Движение врагов (и начисление денег/жизней)
+            updateEnemies(deltaSec, now);
+            // Проверка завершения волны
+            checkWaveCompletion();
+            updateUI();
+        }
+
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // ---------- ОБРАБОТКА КЛИКА НА CANVAS ----------
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        const col = Math.floor(mouseX / CELL_SIZE);
+        const row = Math.floor(mouseY / CELL_SIZE);
+
+        if (col >= 0 && col < GRID_SIZE && row >= 0 && row < GRID_SIZE) {
+            tryPlaceTower(col, row);
+        }
+    });
+
+    // КНОПКИ
+    startWaveBtn.addEventListener('click', () => {
+        if (gameStatus === 'playing' && !waveActive) {
+            startWave();
+        }
+    });
+
+    restartBtn.addEventListener('click', () => {
+        restartGame();
+    });
+
+    // ---------- ИНИЦИАЛИЗАЦИЯ ----------
+    function init() {
+        restartGame(); // всё в исходное
+        requestAnimationFrame(gameLoop);
+    }
+
+    init();
+})();
 </script>
 </body>
 </html>
